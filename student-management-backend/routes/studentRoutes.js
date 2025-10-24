@@ -12,7 +12,7 @@ router.get('/students/:id', studentController.getStudentById);
 router.post('/students', studentController.createStudent);
 
 // Update student
-router.put('/students/:id', studentController.updateStudent);
+router.patch('/students/:id', studentController.updateStudent);
 
 // Delete student
 router.delete('/students/:id', studentController.deleteStudent);

@@ -85,7 +85,7 @@ const StudentTable = () => {
             <p><strong>Average Marks:</strong> ${student.average_score}</p>
           </div>
         `,
-        icon: 'info',
+        // icon: 'info',
       });
     } catch {
       Swal.fire({
