@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { studentAPI } from '../services/api';
 import Swal from 'sweetalert2';
 import { FaEdit, FaTrash, FaEye, FaSearch } from 'react-icons/fa';
@@ -17,11 +17,8 @@ const StudentTable = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetchStudents();
-  }, [currentPage, limit]);
-
-  const fetchStudents = async () => {
+  // ✅ Memoized fetch function (prevents re-creation)
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       const response = await studentAPI.getAllStudents(currentPage, limit);
@@ -37,7 +34,12 @@ const StudentTable = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, limit]);
+
+  // ✅ Proper dependency — no more warning
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   const handleDelete = async (id, name) => {
     const result = await Swal.fire({
@@ -85,7 +87,6 @@ const StudentTable = () => {
             <p><strong>Average Marks:</strong> ${student.average_score}</p>
           </div>
         `,
-        // icon: 'info',
       });
     } catch {
       Swal.fire({
@@ -110,13 +111,14 @@ const StudentTable = () => {
     setCurrentPage(1);
   };
 
-  // Updated Search Logic (works by ID or name)
+  // ✅ Improved Search Logic (by ID or Name)
   const handleSearch = async (e) => {
     e.preventDefault();
     const query = searchQuery.trim();
     if (!query) return fetchStudents();
     setLoading(true);
 
+    // Search by ID
     if (!isNaN(query)) {
       try {
         const response = await studentAPI.getStudentById(query);
@@ -133,6 +135,7 @@ const StudentTable = () => {
       return;
     }
 
+    // Search by Name
     try {
       const response = await studentAPI.getAllStudents(1, 100);
       const filtered = response.data.data.filter((st) =>
@@ -161,7 +164,6 @@ const StudentTable = () => {
               >
                 Add Student
               </button>
-            
             </div>
           </div>
         </div>
@@ -183,19 +185,20 @@ const StudentTable = () => {
               </select>
               <label> entries</label>
             </div>
-              <form className="d-flex" onSubmit={handleSearch}>
-                <input
-                  type="text"
-                  className="form-control me-2"
-                  style={{ width: '200px' }}
-                  placeholder="Search by ID or name"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button className="btn btn-secondary" type="submit">
-                  <FaSearch />
-                </button>
-              </form>
+
+            <form className="d-flex" onSubmit={handleSearch}>
+              <input
+                type="text"
+                className="form-control me-2"
+                style={{ width: '200px' }}
+                placeholder="Search by ID or name"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button className="btn btn-secondary" type="submit">
+                <FaSearch />
+              </button>
+            </form>
           </div>
 
           {loading ? (
@@ -301,9 +304,7 @@ const StudentTable = () => {
                       );
                     })}
 
-                    <li
-                      className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
-                    >
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                       <button
                         className="page-link"
                         onClick={() => handlePageChange(currentPage + 1)}
@@ -311,9 +312,7 @@ const StudentTable = () => {
                         Next
                       </button>
                     </li>
-                    <li
-                      className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
-                    >
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                       <button
                         className="page-link"
                         onClick={() => handlePageChange(totalPages)}
